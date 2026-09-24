@@ -43,6 +43,7 @@ jobs:
             --config=p/dockerfile \
             --config=p/terraform \
             --config=p/kubernetes \
+            --no-git-ignore \
             --json --output=semgrep-results.json \
             devops-tp12/app \
             devops-tp12/monitoring-k8s-manifests.yaml \
@@ -82,6 +83,7 @@ jobs:
       - name: Generar reporte SARIF
         run: |
           semgrep scan --config=auto \
+            --no-git-ignore \
             --sarif --output=semgrep.sarif \
             devops-tp12/app \
             devops-tp12/monitoring-k8s-manifests.yaml \
@@ -90,15 +92,15 @@ jobs:
       - name: Cargar resultados a GitHub Code Scanning
         if: always() && hashFiles('semgrep.sarif') != ''
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: semgrep.sarif
 
       - name: Guard estricto de seguridad (Andon Cord)
         run: |
           semgrep scan --config=p/owasp-top-ten \
-            --severity=ERROR --error \
+            --severity=ERROR --error --no-git-ignore \
             devops-tp12/app \
-            devops-tp12/chart \
+            .semgrep-tmp \
             devops-tp12/monitoring-k8s-manifests.yaml \
             guia-11
